@@ -15,7 +15,8 @@ This project is a decentralized Raffle Lottery application built using **Solidit
 
 ## 🧱 Architecture Overview
 
-![VRF Architecture](https://www.twistedbrackets.com/content/images/size/w1200/2023/03/lottery-blockchain-flow-2.jpg)
+
+| <img src="https://www.twistedbrackets.com/content/images/size/w1200/2023/03/lottery-blockchain-flow-2.jpg" width="600"/> | <img src="https://i.ibb.co/PGGGcHZf/Chat-GPT-Image-May-6-2025-02-39-08-AM.png" width="200"/> |
 
 ---
 
