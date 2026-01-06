@@ -7,6 +7,9 @@ import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {Raffle} from "../../src/Raffle.sol";
 
 contract RaffleTest is Test{
+    event RaffleEntered(address indexed player);
+
+
     Raffle public raffle;
     HelperConfig public helperConfig;
 
@@ -17,12 +20,15 @@ contract RaffleTest is Test{
     uint256 subscriptionId;
     uint32 callbackGasLimit;
 
-    address public Player = makeAddr("player");
+    address public PLAYER = makeAddr("player");
     uint256 constant STARTING_VALUE = 10 ether;
+    uint256 public constant LINK_BALANCE = 100 ether;
 
     function setUp() external {
         DeployRaffle deployer = new DeployRaffle();
         (raffle, helperConfig) = deployer.deployRaffle();
+        vm.deal(PLAYER,STARTING_VALUE);
+
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         entranceFee = config.entranceFee;
         interval = config.interval;
@@ -35,4 +41,115 @@ contract RaffleTest is Test{
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
     }
 
+    function testRaffleRevertsWHenYouDontPayEnough() public {
+        vm.prank(PLAYER);
+        vm.expectRevert(Raffle.Raffle__SendMoreToEnterRaffle.selector);
+        raffle.enterRaffle();
+    }
+
+
+    function testRaffleRecordsPlayerWhenTheyEnter() public {
+        // Arrange
+        vm.prank(PLAYER);
+        // Act
+        raffle.enterRaffle{value: entranceFee}();
+        // Assert
+        address playerRecorded = raffle.getPlayer(0);
+        assert(playerRecorded == PLAYER);
+    }
+
+    function testEnteringRaffleEmitsEvent() public {
+        vm.prank(PLAYER);
+
+        vm.expectEmit(true,false,false,false, address(raffle));
+        emit RaffleEntered(PLAYER);
+
+        raffle.enterRaffle{value:entranceFee}();
+    }
+
+    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public{
+        //Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value:entranceFee}();
+        vm.warp(block.timestamp + interval +1);
+        vm.roll(block.number + 1);
+        raffle.performUpkeep("");
+
+        //Act //assert
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value:entranceFee}();
+    }
+
+    function testCheckUpKeepReturnsFalseIfItHasNoBalance() public{
+        //Arrange
+        vm.warp(block.timestamp + interval +1);
+        vm.roll(block.number + 1);
+
+        //Act
+        (bool upKeepNeeded, ) = raffle.checkUpKeep("");
+
+        //assert
+        assert(!upKeepNeeded);
+    }
+    
+    function testCheckUpKeepReturnFalseIfRaffleIsntOpen() public {
+        //Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value:entranceFee}();
+        vm.warp(block.timestamp + interval +1);
+        vm.roll(block.number + 1);
+        raffle.performUpkeep("");
+
+        //Act
+        (bool upKeepNeeded, ) = raffle.checkUpKeep("");
+
+        //Assert 
+        assert(!upKeepNeeded);
+    }
+
+      //challege
+    //testCheckUpKeepReturnsFalseIfEnoughTimeHasPassed
+    //testChecckUpKeepReturnsTRueWhenParametersAreGood
+
+
+
+
+
+
+    function testPerformUpKeepCanOnlyRunIfCheckUpKeepIsTrue() public {
+        //Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value:entranceFee}();
+        vm.warp(block.timestamp + interval +1);
+        vm.roll(block.number + 1);
+
+        //Act /Assert
+        raffle.performUpkeep("");
+    }
+
+    function testPerformUpKeepRevertsIfCheckUpKeepIsFalse() public{
+        //Arrange
+        uint256 currentBalance  = 0;
+        uint256 numPlayers = 0;
+        Raffle.RaffleState rState = raffle.getRaffleState();
+
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value:entranceFee}();
+        currentBalance = currentBalance + entranceFee;
+        numPlayers = 1;
+
+        //Act //assert
+        vm.expectRevert(
+            abi.encodeWithSelector(Raffle.Raffle__UpKeepNotNeeded.selector,currentBalance,numPlayers,rState)
+        );
+        raffle.performUpkeep("");
+    }
+
+  
+
+
+
+
+    
 }
