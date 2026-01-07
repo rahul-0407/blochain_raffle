@@ -78,7 +78,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
 
 
-    function checkUpKeep(bytes memory /* checkData */) public view returns(bool upKeepNeeded, bytes memory /*perfornData */) {
+    function checkUpkeep(bytes memory /* checkData */) public view returns(bool upKeepNeeded, bytes memory /*perfornData */) {
         bool timeHasPassed = ((block.timestamp - s_lastTimeStamp) >= i_interval);
         bool isOpen = s_raffleState == RaffleState.OPEN;
         bool hasBalance = address(this).balance > 0;
@@ -91,7 +91,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
 
     function performUpkeep(bytes calldata /* performData */) external {
-        (bool upKeepNeeded, ) = checkUpKeep(""); 
+        (bool upKeepNeeded, ) = checkUpkeep(""); 
         if (!upKeepNeeded) {
             revert Raffle__UpKeepNotNeeded(address(this).balance, s_players.length, uint256(s_raffleState));
         }
@@ -147,5 +147,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     function getPlayer(uint indexOfPlayer) external view returns(address){
         return s_players[indexOfPlayer];
+    }
+
+    function getLatTimeStamp() external view returns(uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRecentWinner() external view returns(address) {
+        return s_recentWinner;
     }
 }

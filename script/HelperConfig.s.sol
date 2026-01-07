@@ -30,6 +30,7 @@ contract HelperConfig is CodeConstants, Script{
         uint256 subscriptionId;
         uint32 callbackGasLimit;
         address link;
+        address account;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -57,13 +58,14 @@ contract HelperConfig is CodeConstants, Script{
 
    function getSepoliaEthConfig() public pure returns(NetworkConfig memory) {
     return NetworkConfig({
-        entranceFee: 0.1 ether,
+        entranceFee: 0.01 ether,
         interval: 30,
         vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
         gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
         subscriptionId: 101430276283338185019644046475386765448916154387814658405391740491876020314216,
         callbackGasLimit: 500000,
-        link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+        link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+        account: 0xF8C85DddaAfE76E46593Cc565011716A31192B97
     });
 }
 
@@ -85,7 +87,8 @@ contract HelperConfig is CodeConstants, Script{
             gasLane: 0x9e1344a1247c8a1785d0a4681a27152bffdb43666ae5bf7d14d24a5efd44bf71,
             subscriptionId: 0,
             callbackGasLimit: 500000,
-            link: address(linkToken)
+            link: address(linkToken),
+            account : 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
         });
 
         return localNetworkConfig;
